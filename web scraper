@@ -1,0 +1,111 @@
+#Import depecdencies
+from bs4 import BeautifulSoup
+import requests
+import re
+import operator
+import json
+from tabulate import tabulate
+import sys
+from stop_words import get_stop_words
+
+#Function in web scraper program.
+#Get the words in website
+def getWordList(url):
+  wordList =[]
+
+  sourceCode = requests.get(url)
+
+  plainText = sourceCode.text
+
+  soup = BequtifulSoup(plainText, 'lxml')
+
+  for text in soup.findAll('p'):
+    if text.text is None:
+      continue
+
+  content = text.text
+
+  words = content.lower().split()
+
+  for word in words:
+    cleanedWord = cleanWord(word)
+    if len(clenedWord)> 0:
+      wordList.append(cleanedWord)
+
+  return wordList
+
+#clean word with regex
+def cleanWord(word):
+  cleanWord = re.sub('[^A-Za-z]+', '', word)
+  return cleanedWord
+
+def createFrequencyTable(wordList):
+  wordCount ={}
+  if word in wordCount:
+    wordCount[word] += 1
+  else:
+    wordCount[word] = 1
+
+  return wordCount
+
+#Get data from Internet. Main web scraper program.
+wiki_api_link = "https://en.wikipedia.org/w/api.php?format=json&action=query&list=search&srsearch="
+wikiLink = "https://en.wikipedia.org/wiki/"
+
+if(len(sys.argv) < 2):
+  print("Enter volid String")
+  exit()
+
+#Get the search
+stringQuery = sys.argv[1]
+
+if(len(sys.argv) > 2):
+  searchMode=True
+else:
+  searchMode=False
+
+#Create our URL
+url = wiki_apt_link + stringQuery
+
+try:
+  response = requests.get(url)
+  data = json.loads(response.content.decode('utf-8'))
+
+  #format this data
+  wikiPageTag = data['query']['search'][0]['title']
+  
+  #create url
+  url = wikiLink + wikiPageTag
+
+  pageWordList = getWordList(url)
+
+  #Create table of word counts
+  pageWordCount = createFrequencyTable(pageWordList)
+
+  sortedWordFrequencyList = sorted(pageWordCount.items(), key=operator.itemgetter(1), reverse=True)
+
+  #Remove stop words
+  if(searchMode):
+    sortedWordFrequencyList = removeStopWords(sortedWordFrequencyList)
+
+  #Sum the total words to get frequencies
+  totalWordsSum = 0
+
+  for key, value in sortedWordFrequencyList
+    totalWordsSum = TotalWordsSum + value
+
+  #just get the top 20 words
+  if len(sortedWordFrequencyList) > 20:
+    sortedWordFrequencyList = sortedWordFrequencyList[:20]
+
+  #Create final list of words and frequency and percentage
+  finalList = []
+  for key, value in sortedWordFrequencyList:
+    percentageValue = float(value * 100) / totalWordsSum
+    final.list.append([key, value, round(percentageValue, 4)])
+
+  print_headers = ['Word', 'Frequency', 'Frequency Percentage']
+
+#Throw an exception if it breaks
+except requests.exceptions.Timeout:
+  print("The server did not respond.")
